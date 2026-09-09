@@ -4,6 +4,7 @@ CONF=/data/wireproxy.conf
 umask 077
 export WG_PRIVATE_KEY="$(bashio::config 'private_key')"
 PSK="$(bashio::config 'preshared_key')"
+SILENT_FLAG="-s"
 
 {
   echo "[Interface]"
@@ -34,6 +35,9 @@ PSK="$(bashio::config 'preshared_key')"
   bashio::config.has_value 'awg_reject_after_time' && echo "RejectAfterTime = $(bashio::config 'awg_reject_after_time')"
   bashio::config.has_value 'awg_keepalive_timeout'      && echo "KeepaliveTimeout = $(bashio::config 'awg_keepalive_timeout')"
   bashio::config.has_value 'awg_max_handshake_attempts'  && echo "MaxHandshakeAttempts = $(bashio::config 'awg_max_handshake_attempts')"
+  bashio::config.true 'debug_logging' && SILENT_FLAG=""
+
+
 
   if bashio::config.true 'awg_random_trailers'; then
     echo "RandomTrailers = on"
@@ -60,4 +64,4 @@ PSK="$(bashio::config 'preshared_key')"
 chmod 600 "$CONF"
 
 bashio::log.info "Starting wireproxy..."
-exec wireproxy -c "$CONF"
+exec wireproxy -c "$CONF" $SILENT_FLAG

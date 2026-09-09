@@ -29,6 +29,7 @@ options:
   http_bind: "0.0.0.0:25345"
   awg_random_trailers: false
   awg_disable_cookies: false
+  debug_logging: false
 schema:
   private_key: password
   address: str
@@ -64,3 +65,4 @@ schema:
   awg_max_handshake_attempts: str?
   awg_random_trailers: bool
   awg_disable_cookies: bool
+  debug_logging: bool
