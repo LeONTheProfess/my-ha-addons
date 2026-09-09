@@ -31,6 +31,15 @@ PSK="$(bashio::config 'preshared_key')"
   bashio::config.has_value 'awg_rekey_after_time'  && echo "RekeyAfterTime = $(bashio::config 'awg_rekey_after_time')"
   bashio::config.has_value 'awg_rekey_timeout'     && echo "RekeyTimeout = $(bashio::config 'awg_rekey_timeout')"
   bashio::config.has_value 'awg_reject_after_time' && echo "RejectAfterTime = $(bashio::config 'awg_reject_after_time')"
+  bashio::config.has_value 'awg_keepalive_timeout'      && echo "KeepaliveTimeout = $(bashio::config 'awg_keepalive_timeout')"
+  bashio::config.has_value 'awg_max_handshake_attempts'  && echo "MaxHandshakeAttempts = $(bashio::config 'awg_max_handshake_attempts')"
+
+  if bashio::config.true 'awg_random_trailers'; then
+    echo "RandomTrailers = on"
+  fi
+  if bashio::config.true 'awg_disable_cookies'; then
+    echo "DisableCookies = on"
+  fi
 
   echo ""
   echo "[Peer]"
