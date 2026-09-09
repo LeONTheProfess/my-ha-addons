@@ -1,6 +1,7 @@
 #!/usr/bin/with-contenv bashio
 
 CONF=/data/wireproxy.conf
+umask 077
 export WG_PRIVATE_KEY="$(bashio::config 'private_key')"
 PSK="$(bashio::config 'preshared_key')"
 
@@ -56,6 +57,7 @@ PSK="$(bashio::config 'preshared_key')"
   echo "[http]"
   echo "BindAddress = $(bashio::config 'http_bind')"
 } > "$CONF"
+chmod 600 "$CONF"
 
 bashio::log.info "Starting wireproxy..."
 exec wireproxy -c "$CONF"

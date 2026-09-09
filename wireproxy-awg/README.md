@@ -1,396 +1,117 @@
-# wireproxy-awg
+# WireProxy AWG Home Assistant add-on
 
-[![ISC licensed](https://img.shields.io/badge/license-ISC-blue)](./LICENSE)
-[![Build status](https://github.com/artem-russkikh/wireproxy-awg/actions/workflows/build.yml/badge.svg)](https://github.com/artem-russkikh/wireproxy-awg/actions)
-[![Documentation](https://img.shields.io/badge/godoc-wireproxy--awg-blue)](https://pkg.go.dev/github.com/artem-russkikh/wireproxy-awg)
+Home Assistant add-on that runs [WireProxy AWG](https://github.com/artem-russkikh/wireproxy-awg) as an AmneziaWG-compatible WireGuard client and exposes SOCKS5 and HTTP proxy endpoints.
 
-AmneziaWG compatible wireguard client that exposes itself as a socks5/http proxy or tunnels. Forked from [wireproxy](https://github.com/windtf/wireproxy)
+## Origin and license
 
-# What is this
+This project was originally taken from [artem-russkikh/wireproxy-awg](https://github.com/artem-russkikh/wireproxy-awg). The add-on packaging, Home Assistant configuration and startup integration in this repository are maintained separately.
 
-`wireproxy` is a completely userspace application that connects to a wireguard peer,
-and exposes a socks5/http proxy or tunnels on the machine. This can be useful if you need
-to connect to certain sites via a wireguard peer, but can't be bothered to setup a new network
-interface for whatever reasons.
+The upstream project is licensed under ISC. See [LICENSE](LICENSE).
 
-# Why you might want this
+## Requirements
 
-- You simply want to use wireguard as a way to proxy some traffic.
-- You don't want root permission just to change wireguard settings.
+- Home Assistant OS or Supervised installation with add-on support.
+- One of the supported architectures: `amd64`, `aarch64` or `armv7`.
+- An AmneziaWG/WireGuard server configuration:
+  - client private key;
+  - client address, normally an IPv4 `/32` address;
+  - server public key;
+  - server endpoint such as `vpn.example.com:51820`.
+- Access to `/dev/net/tun`. The add-on requests `NET_ADMIN` and the TUN device automatically.
 
-Currently, I'm running wireproxy connected to a wireguard server in another country,
-and configured my browser to use wireproxy for certain sites. It's pretty useful since
-wireproxy is completely isolated from my network interfaces, and I don't need root to configure
-anything.
+## Installation
 
-Users who want something similar but for Amnezia VPN can use [this fork](https://github.com/artem-russkikh/wireproxy-awg)
-of wireproxy by [@artem-russkikh](https://github.com/artem-russkikh).
+1. Open **Settings -> Add-ons -> Add-on store** in Home Assistant.
+2. Open the menu in the upper-right corner and select **Repositories**.
+3. Add this repository:
 
-# Feature
+   `https://github.com/LeONTheProfess/my-ha-addons`
 
-- TCP static routing for client and server
-- SOCKS5/HTTP proxy (HTTP proxy supports both CONNECT tunnelling and plain HTTP forwarding)
+4. Find **WireProxy AWG** in the store and install it.
+5. Open the add-on configuration, enter the required values, save, and start the add-on.
 
-# TODO
+If the repository was already added before, remove the old repository URL containing `LeONTheProfes` and add the corrected URL above. Then refresh the add-on store so Home Assistant reads the current repository revision.
 
-- UDP Support in SOCKS5
-- UDP static routing
+## Configuration
 
-# Usage
+The minimum working configuration is:
 
-```bash
-./wireproxy [-c path to config]
+```yaml
+private_key: "YOUR_CLIENT_PRIVATE_KEY"
+address: "10.200.200.2/32"
+dns: "10.200.200.1"
+peer_public_key: "SERVER_PUBLIC_KEY"
+endpoint: "vpn.example.com:51820"
+persistent_keepalive: "25"
+socks5_bind: "0.0.0.0:25344"
+http_bind: "0.0.0.0:25345"
 ```
 
+Set the values in the add-on UI. Do not publish private keys or a saved add-on configuration in a public repository.
+
+| Option | Required | Description |
+| --- | --- | --- |
+| `private_key` | Yes | WireGuard/AmneziaWG client private key. |
+| `address` | Yes | Client tunnel address, for example `10.200.200.2/32`. |
+| `dns` | Yes | DNS server used by the WireProxy configuration. |
+| `peer_public_key` | Yes | Public key of the WireGuard server. |
+| `endpoint` | Yes | Server hostname or IP and port. |
+| `preshared_key` | No | Optional WireGuard preshared key. |
+| `persistent_keepalive` | No | Keepalive interval in seconds; ranges such as `15-25` are supported. |
+| `socks5_bind` | Yes | SOCKS5 listen address. Default: `0.0.0.0:25344`. |
+| `http_bind` | Yes | HTTP proxy listen address. Default: `0.0.0.0:25345`. |
+
+### AmneziaWG options
+
+The following optional fields are passed to the `[Interface]` section using the same names as the upstream project:
+
+| Options | Meaning |
+| --- | --- |
+| `awg_jc`, `awg_jmin`, `awg_jmax` | Junk packet count and size limits. |
+| `awg_s1` - `awg_s4` | AmneziaWG packet padding values. |
+| `awg_h1` - `awg_h4` | AmneziaWG handshake message types. |
+| `awg_i1` - `awg_i5` | Custom packet tag sequences. |
+| `awg_header_protection_key` | Header protection key. |
+| `awg_content_padding_addition` | Additional content padding or range. |
+| `awg_rekey_after_time` | Rekey interval or range in seconds. |
+| `awg_rekey_timeout` | Handshake retry timeout or range in seconds. |
+| `awg_reject_after_time` | Key rejection timeout or range in seconds. |
+| `awg_keepalive_timeout` | Idle keepalive timeout or range in seconds. |
+| `awg_max_handshake_attempts` | Maximum handshake attempts or range. |
+| `awg_random_trailers` | Enable random packet trailers. |
+| `awg_disable_cookies` | Disable WireGuard cookie replies. |
+
+Use values supplied by your AmneziaWG server administrator. The server must support the selected AmneziaWG features; otherwise the tunnel may fail to establish.
+
+## Using the proxy
+
+After the add-on starts, clients on the configured bind address can use:
+
+- SOCKS5: `socks5://home-assistant-host:25344`
+- HTTP: `http://home-assistant-host:25345`
+
+For a local-only proxy, use `127.0.0.1:25344` and `127.0.0.1:25345` in the add-on configuration instead of `0.0.0.0`. The add-on does not provide proxy username/password authentication. Do not expose these ports to an untrusted network.
+
+The add-on exposes ports `25344/tcp` and `25345/tcp`. Home Assistant port mappings can be changed in the add-on network settings if these host ports are already in use.
+
+## Troubleshooting
+
+1. Open the add-on **Log** tab and check the generated WireProxy startup error.
+2. Confirm that the private key, server public key and endpoint are copied without extra spaces.
+3. Confirm that the endpoint UDP port is reachable from the Home Assistant host.
+4. Check that the client address does not overlap another network.
+5. If AmneziaWG options are enabled, compare every value with the server configuration and temporarily disable optional AWG fields to isolate the problem.
+6. Verify that `/dev/net/tun` exists on the host and that the installation supports add-ons.
+
+The generated configuration is stored inside the add-on at `/data/wireproxy.conf` and is recreated on every start from the add-on options.
+
+## Development and validation
+
+The Go source is the upstream WireProxy AWG source kept in this repository for tests and for building the add-on image. Run these checks from `wireproxy-awg/`:
+
 ```bash
-usage: wireproxy [-h|--help] [-c|--config "<value>"] [-s|--silent]
-                 [-d|--daemon] [-i|--info "<value>"] [-v|--version]
-                 [-n|--configtest]
-
-                 Userspace wireguard client for proxying
-
-Arguments:
-
-  -h  --help        Print help information
-  -c  --config      Path of configuration file
-                    Default paths: /etc/wireproxy/wireproxy.conf, $HOME/.config/wireproxy.conf
-  -s  --silent      Silent mode
-  -d  --daemon      Make wireproxy run in background
-  -i  --info        Specify the address and port for exposing health status
-  -v  --version     Print version
-  -n  --configtest  Configtest mode. Only check the configuration file for
-                    validity.
-```
-
-# Build instruction
-
-```bash
-git clone https://github.com/artem-russkikh/wireproxy-awg
-cd wireproxy-awg
+go test ./...
 make
 ```
 
-# Install
-
-```bash
-go install github.com/artem-russkikh/wireproxy-awg/cmd/wireproxy@v1.0.18 # or @latest
-```
-
-# Use with VPN
-
-Instructions for using wireproxy with Firefox container tabs and auto-start on MacOS can be found [here](/UseWithVPN.md).
-
-# AmneziaWG parameters
-
-This fork supports AmneziaWG 1.0, 2.0, 3.0, and 3.1. The obfuscation parameters go
-into the `[Interface]` section, next to the usual wireguard ones, and use the
-same names as an `awg-quick` configuration, so a config exported from the
-Amnezia client can be pasted in as is. Every parameter is optional: with none
-of them set wireproxy behaves like plain wireguard.
-
-Values written as a *range* accept either a single number (`25`) or an interval
-(`15-25`), in which case a random value inside the interval is picked for every
-packet.
-
-### Junk packets (AmneziaWG 1.0)
-
-| Parameter | Value | Meaning |
-| --- | --- | --- |
-| `Jc` | 1-128 | number of junk packets sent before every handshake |
-| `Jmin` | bytes | minimum junk packet size |
-| `Jmax` | bytes, <= 1280 | maximum junk packet size |
-| `S1` | bytes | random padding prepended to the handshake initiation message |
-| `S2` | bytes | random padding prepended to the handshake response message |
-| `H1` | range | message type of the handshake initiation message |
-| `H2` | range | message type of the handshake response message |
-| `H3` | range | message type of the cookie reply message |
-| `H4` | range | message type of the transport message |
-
-`H1`-`H4` must not overlap, and `S1` + 148 must differ from `S2` + 92.
-
-### Signature packets (AmneziaWG 2.0)
-
-| Parameter | Value | Meaning |
-| --- | --- | --- |
-| `S3` | bytes | random padding prepended to the cookie reply message |
-| `S4` | bytes | random padding prepended to transport messages |
-| `I1` - `I5` | tag sequence | custom packets sent before every handshake, in order |
-
-The `I1`-`I5` value is a sequence of tags:
-
-| Tag | Meaning |
-| --- | --- |
-| `<b 0x[hex]>` | the given bytes, as is |
-| `<r [size]>` | `size` random bytes |
-| `<rd [size]>` | `size` random digits |
-| `<rc [size]>` | `size` random letters |
-| `<t>` | current time, 4 bytes, UNIX format |
-
-### Header protection, content padding and timings (AmneziaWG 3.0)
-
-| Parameter | Value | Meaning |
-| --- | --- | --- |
-| `HeaderProtectionKey` | base64 key | encrypts the low entropy fields of every packet header |
-| `ContentPaddingAddition` | range | extra random padding added to transport messages |
-| `RekeyAfterTime` | range, seconds | time after which a new handshake is started |
-| `RekeyTimeout` | range, seconds | time after which a handshake is retried |
-| `RejectAfterTime` | range, seconds | time after which the keys are no longer used |
-| `KeepaliveTimeout` | range, seconds | idle time after which a keepalive is sent |
-| `MaxHandshakeAttempts` | range | how many times a handshake is retried |
-
-`HeaderProtectionKey` is generated with `awg genkey` and has to be the same on
-both sides. It uses the `S1`-`S4` padding as its nonce, so all four of them have
-to be set to at least 12 when it is in use.
-
-In the `[Peer]` section `PersistentKeepalive` also accepts a range.
-
-### Random trailers and disabled cookies (AmneziaWG 3.1)
-
-| Parameter | Value | Meaning |
-| --- | --- | --- |
-| `RandomTrailers` | `on` / `off` | appends random trailing bytes to protocol packets |
-| `DisableCookies` | `on` / `off` | disables sending WireGuard cookie replies |
-
-AWG 3.1 has to be enabled on the server as well. After upgrading an Amnezia
-Self-hosted server, generate a new client configuration instead of reusing or
-converting an AWG 2.0 configuration.
-
-# Sample config file
-
-```ini
-# The [Interface] and [Peer] configurations follow the same semantics and meaning
-# of a wg-quick configuration. To understand what these fields mean, please refer to:
-# https://wiki.archlinux.org/title/WireGuard#Persistent_configuration
-# https://www.wireguard.com/#simple-network-interface
-[Interface]
-Address = 10.200.200.2/32 # The subnet should be /32 and /128 for IPv4 and v6 respectively
-# MTU = 1420 (optional)
-PrivateKey = uCTIK+56CPyCvwJxmU5dBfuyJvPuSXAq1FzHdnIxe1Q=
-# PrivateKey = $MY_WIREGUARD_PRIVATE_KEY # Alternatively, reference environment variables
-DNS = 10.200.200.1
-
-# AmneziaWG parameters, all optional. See the section above for what they mean.
-#Jc = 5
-#Jmin = 50
-#Jmax = 1000
-#S1 = 12
-#S2 = 15
-#S3 = 18
-#S4 = 21
-#H1 = 1234567
-#H2 = 2345678
-#H3 = 3456789
-#H4 = 4567890
-#I1 = <b 0x504f5354><rc 8><t>
-#HeaderProtectionKey = 6DPqLDkFO7mFvPKGvIY0zpk4iVwPQBHCFY2iVLdPGmE=
-#ContentPaddingAddition = 10-100
-#RekeyAfterTime = 100-120
-#RekeyTimeout = 5
-#RejectAfterTime = 180-200
-#KeepaliveTimeout = 10-15
-#MaxHandshakeAttempts = 18-20
-#RandomTrailers = on
-#DisableCookies = on
-
-[Peer]
-PublicKey = QP+A67Z2UBrMgvNIdHv8gPel5URWNLS4B3ZQ2hQIZlg=
-# PresharedKey = UItQuvLsyh50ucXHfjF0bbR4IIpVBd74lwKc8uIPXXs= (optional)
-Endpoint = my.ddns.example.com:51820
-# PersistentKeepalive = 25 (optional, a range like 15-25 also works)
-
-# TCPClientTunnel is a tunnel listening on your machine,
-# and it forwards any TCP traffic received to the specified target via wireguard.
-# Flow:
-# <an app on your LAN> --> localhost:25565 --(wireguard)--> play.cubecraft.net:25565
-[TCPClientTunnel]
-BindAddress = 127.0.0.1:25565
-Target = play.cubecraft.net:25565
-
-# TCPServerTunnel is a tunnel listening on wireguard,
-# and it forwards any TCP traffic received to the specified target via local network.
-# Flow:
-# <an app on your wireguard network> --(wireguard)--> 172.16.31.2:3422 --> localhost:25545
-[TCPServerTunnel]
-ListenPort = 3422
-Target = localhost:25545
-
-# STDIOTunnel is a tunnel connecting the standard input and output of the wireproxy
-# process to the specified TCP target via wireguard.
-# This is especially useful to use wireproxy as a ProxyCommand parameter in openssh
-# For example:
-#    ssh -o ProxyCommand='wireproxy -c myconfig.conf' ssh.myserver.net
-# Flow:
-# Piped command -->(wireguard)--> ssh.myserver.net:22
-[STDIOTunnel]
-Target = ssh.myserver.net:22
-
-# Socks5 creates a socks5 proxy on your LAN, and all traffic would be routed via wireguard.
-[Socks5]
-BindAddress = 127.0.0.1:25344
-
-# Socks5 authentication parameters, specifying username and password enables
-# proxy authentication.
-#Username = ...
-# Avoid using spaces in the password field
-#Password = ...
-
-# http creates a http proxy on your LAN, and all traffic would be routed via wireguard.
-[http]
-BindAddress = 127.0.0.1:25345
-
-# HTTP authentication parameters, specifying username and password enables
-# proxy authentication.
-#Username = ...
-# Avoid using spaces in the password field
-#Password = ...
-
-# Specifying certificate and key enables HTTPS
-#CertFile = ...
-#KeyFile = ...
-```
-
-Alternatively, if you already have a wireguard config, you can import it in the
-wireproxy config file like this:
-
-```ini
-WGConfig = <path to the wireguard config>
-
-# Same semantics as above
-[TCPClientTunnel]
-...
-
-[TCPServerTunnel]
-...
-
-[Socks5]
-...
-```
-
-Having multiple peers is also supported. `AllowedIPs` would need to be specified
-such that wireproxy would know which peer to forward to.
-
-```ini
-[Interface]
-Address = 10.254.254.40/32
-PrivateKey = XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX=
-
-[Peer]
-Endpoint = 192.168.0.204:51820
-PublicKey = YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY=
-AllowedIPs = 10.254.254.100/32
-PersistentKeepalive = 25
-
-[Peer]
-PublicKey = ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ=
-AllowedIPs = 10.254.254.1/32, fdee:1337:c000:d00d::1/128
-Endpoint = 172.16.0.185:44044
-PersistentKeepalive = 25
-
-
-[TCPServerTunnel]
-ListenPort = 5000
-Target = service-one.servicenet:5000
-
-[TCPServerTunnel]
-ListenPort = 5001
-Target = service-two.servicenet:5001
-
-[TCPServerTunnel]
-ListenPort = 5080
-Target = service-three.servicenet:80
-
-[UDPProxyTunnel]
-BindAddress = 127.0.0.1:53
-Target = 1.1.1.1:53
-InactivityTimeout = 30 # If its set to 0, it will never timeout
-
-[Resolve]
-# Set DNS Resovle Strategy
-# `ipv4`: Prioritize A records.
-# `ipv6`: Prioritize AAAA records       .
-# `auto` (Default): If the WireGuard interface has IPv4 address only, it's equivalent to `ipv4`, otherwise it's equivalent to `ipv6`.
-ResolveStrategy = auto 
-```
-
-Wireproxy can also allow peers to connect to it:
-
-```ini
-[Interface]
-ListenPort = 5400
-...
-
-[Peer]
-PublicKey = YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY=
-AllowedIPs = 10.254.254.100/32
-# Note there is no Endpoint defined here.
-```
-
-# Health endpoint
-
-Wireproxy supports exposing a health endpoint for monitoring purposes.
-The argument `--info/-i` specifies an address and port (e.g. `localhost:9080`), which exposes a HTTP server that provides health status metric of the server.
-
-Currently two endpoints are implemented:
-
-`/metrics`: Exposes information of the wireguard daemon, this provides the same information you would get with `wg show`. [This](https://www.wireguard.com/xplatform/#example-dialog) shows an example of what the response would look like.
-
-`/readyz`: This responds with a json which shows the last time a pong is received from an IP specified with `CheckAlive`. When `CheckAlive` is set, a ping is sent out to addresses in `CheckAlive` per `CheckAliveInterval` seconds (defaults to 5) via wireguard. If a pong has not been received from one of the addresses within the last `CheckAliveInterval` seconds (+2 seconds for some leeway to account for latency), then it would respond with a 503, otherwise a 200.
-
-For example:
-
-```ini
-[Interface]
-PrivateKey = censored
-Address = 10.2.0.2/32
-DNS = 10.2.0.1
-CheckAlive = 1.1.1.1, 3.3.3.3
-CheckAliveInterval = 3
-
-[Peer]
-PublicKey = censored
-AllowedIPs = 0.0.0.0/0
-Endpoint = 149.34.244.174:51820
-
-[Socks5]
-BindAddress = 127.0.0.1:25344
-```
-
-`/readyz` would respond with
-
-```text
-< HTTP/1.1 503 Service Unavailable
-< Date: Thu, 11 Apr 2024 00:54:59 GMT
-< Content-Length: 35
-< Content-Type: text/plain; charset=utf-8
-<
-{"1.1.1.1":1712796899,"3.3.3.3":0}
-```
-
-And for:
-
-```ini
-[Interface]
-PrivateKey = censored
-Address = 10.2.0.2/32
-DNS = 10.2.0.1
-CheckAlive = 1.1.1.1
-```
-
-`/readyz` would respond with
-
-```text
-< HTTP/1.1 200 OK
-< Date: Thu, 11 Apr 2024 00:56:21 GMT
-< Content-Length: 23
-< Content-Type: text/plain; charset=utf-8
-<
-{"1.1.1.1":1712796979}
-```
-
-If nothing is set for `CheckAlive`, an empty JSON object with 200 will be the response.
-
-The peer which the ICMP ping packet is routed to depends on the `AllowedIPs` set for each peers.
-
-# Stargazers over time
-
-[![Stargazers over time](https://starchart.cc/artem-russkikh/wireproxy-awg.svg)](https://starchart.cc/artem-russkikh/wireproxy-awg)
+The Home Assistant image is built from `Dockerfile`; there is no `build.yaml` or `build.json` in the current project. The binary source version is pinned in `Dockerfile` through `WIREPROXY_VERSION`.

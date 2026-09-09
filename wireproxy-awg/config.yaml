@@ -1,5 +1,5 @@
 name: WireProxy AWG
-version: "1.0.20"
+version: "1.0.21"
 slug: wireproxy_awg
 description: AmneziaWG-совместимый SOCKS5/HTTP прокси-клиент
 arch:

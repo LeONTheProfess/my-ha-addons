@@ -1,7 +1,7 @@
 # --- builder: собираем как в апстриме ---
 FROM docker.io/golang:1.26 AS builder
 
-ARG WIREPROXY_VERSION=v1.0.18
+ARG WIREPROXY_VERSION=v1.0.21
 WORKDIR /usr/src/wireproxy
 
 RUN git clone --branch ${WIREPROXY_VERSION} --depth 1 \
@@ -20,6 +20,6 @@ RUN chmod a+x /run.sh
 CMD [ "/run.sh" ]
 
 LABEL \
-  io.hass.version="1.0.0" \
+      io.hass.version="1.0.20" \
   io.hass.type="addon" \
-  io.hass.arch="armhf|aarch64|i386|amd64|armv7"
+      io.hass.arch="amd64|aarch64|armv7"
