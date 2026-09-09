@@ -1,13 +1,12 @@
-Copyright (c) 2026 Tsz Fung Wong <im@windtfw.com>
+Copyright (C) 2026 LeONTheProfess
 
-Permission to use, copy, modify, and distribute this software for any
-purpose with or without fee is hereby granted, provided that the above
-copyright notice and this permission notice appear in all copies.
+The Home Assistant add-on packaging in this directory is licensed under the
+GNU General Public License, version 3 or later.
 
-THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+SPDX-License-Identifier: GPL-3.0-or-later
+
+See https://www.gnu.org/licenses/gpl-3.0.html for the full license text.
+
+The upstream WireProxy AWG source is downloaded during the Docker build from
+https://github.com/artem-russkikh/wireproxy-awg and remains licensed under its
+original ISC license.

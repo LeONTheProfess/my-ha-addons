@@ -6,7 +6,9 @@ Home Assistant add-on that runs [WireProxy AWG](https://github.com/artem-russkik
 
 This project was originally taken from [artem-russkikh/wireproxy-awg](https://github.com/artem-russkikh/wireproxy-awg). The add-on packaging, Home Assistant configuration and startup integration in this repository are maintained separately.
 
-The upstream project is licensed under ISC. See [LICENSE](LICENSE).
+The Home Assistant add-on packaging in this repository is licensed under
+[GPL-3.0-or-later](LICENSE). The upstream WireProxy AWG source is downloaded
+during the Docker build and remains licensed under its original ISC license.
 
 ## Requirements
 
@@ -105,13 +107,8 @@ The add-on exposes ports `25344/tcp` and `25345/tcp`. Home Assistant port mappin
 
 The generated configuration is stored inside the add-on at `/data/wireproxy.conf` and is recreated on every start from the add-on options.
 
-## Development and validation
+## Build details
 
-The Go source is the upstream WireProxy AWG source kept in this repository for tests and for building the add-on image. Run these checks from `wireproxy-awg/`:
+The Home Assistant image is built from `Dockerfile`. During the image build, the Dockerfile clones the upstream repository at the version specified by `WIREPROXY_VERSION` and compiles the binary inside the builder stage.
 
-```bash
-go test ./...
-make
-```
-
-The Home Assistant image is built from `Dockerfile`; there is no `build.yaml` or `build.json` in the current project. The binary source version is pinned in `Dockerfile` through `WIREPROXY_VERSION`.
+There is no local copy of the upstream Go source, `build.yaml` or `build.json` in this repository. The add-on version is defined in `config.yaml`; the upstream WireProxy version is defined independently in `Dockerfile`.
