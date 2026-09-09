@@ -24,7 +24,7 @@ options:
   peer_public_key: ""
   endpoint: "my.ddns.example.com:51820"
   preshared_key: ""
-  persistent_keepalive: 25
+  persistent_keepalive: "25"
   socks5_bind: "0.0.0.0:25344"
   http_bind: "0.0.0.0:25345"
   awg_random_trailers: false
@@ -36,7 +36,7 @@ schema:
   peer_public_key: str
   endpoint: str
   preshared_key: password?
-  persistent_keepalive: int(0,65)
+  persistent_keepalive: str?
   socks5_bind: str
   http_bind: str
   awg_jc: int?
@@ -58,7 +58,7 @@ schema:
   awg_header_protection_key: password?
   awg_content_padding_addition: str?
   awg_rekey_after_time: str?
-  awg_rekey_timeout: int?
+  awg_rekey_timeout: str?
   awg_reject_after_time: str?
   awg_keepalive_timeout: str?
   awg_max_handshake_attempts: str?
