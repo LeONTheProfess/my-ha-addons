@@ -1,0 +1,48 @@
+name: WireProxy AWG
+version: "1.0.18"
+slug: wireproxy_awg
+description: AmneziaWG-совместимый SOCKS5/HTTP прокси-клиент
+arch:
+  - amd64
+  - aarch64
+  - armv7
+init: false
+ports:
+  25344/tcp: 25344   # socks5
+  25345/tcp: 25345   # http
+ports_description:
+  25344/tcp: SOCKS5 proxy
+  25345/tcp: HTTP proxy
+devices:
+  - /dev/net/tun
+cap_add:
+  - NET_ADMIN
+options:
+  private_key: ""
+  address: "10.200.200.2/32"
+  dns: "10.200.200.1"
+  peer_public_key: ""
+  endpoint: "my.ddns.example.com:51820"
+  preshared_key: ""
+  persistent_keepalive: 25
+  socks5_bind: "0.0.0.0:25344"
+  http_bind: "0.0.0.0:25345"
+schema:
+  private_key: password
+  address: str
+  dns: str
+  peer_public_key: str
+  endpoint: str
+  preshared_key: password?
+  persistent_keepalive: int(0,65)
+  socks5_bind: str
+  http_bind: str
+  awg_jc: int?
+  awg_jmin: int?
+  awg_jmax: int?
+  awg_s1: int?
+  awg_s2: int?
+  awg_h1: int?
+  awg_h2: int?
+  awg_h3: int?
+  awg_h4: int?
