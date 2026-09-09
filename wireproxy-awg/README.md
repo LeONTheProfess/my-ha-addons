@@ -1,6 +1,8 @@
 # WireProxy AWG Home Assistant add-on
 
-Home Assistant add-on that runs [WireProxy AWG](https://github.com/artem-russkikh/wireproxy-awg) as an AmneziaWG-compatible WireGuard client and exposes SOCKS5 and HTTP proxy endpoints.
+Home Assistant add-on for [WireProxy AWG](https://github.com/artem-russkikh/wireproxy-awg), with support for **AmneziaWG 3.1**, that exposes SOCKS5 and HTTP proxy endpoints.
+
+> **AmneziaWG 3.1 supported.** The add-on supports AWG 3.1 features such as header protection, content padding, rekey parameters, random trailers and disabled cookies. The VPN server must support and be configured for the same AmneziaWG 3.1 features.
 
 ## Origin and license
 
@@ -14,6 +16,7 @@ during the Docker build and remains licensed under its original ISC license.
 
 - Home Assistant OS or Supervised installation with add-on support.
 - One of the supported architectures: `amd64`, `aarch64` or `armv7`.
+- An AmneziaWG **3.1** server. AWG 3.1 must be enabled on the server side when using AWG 3.1-specific options.
 - An AmneziaWG/WireGuard server configuration:
   - client private key;
   - client address, normally an IPv4 `/32` address;
@@ -65,7 +68,7 @@ Set the values in the add-on UI. Do not publish private keys or a saved add-on c
 
 ### AmneziaWG options
 
-The following optional fields are passed to the `[Interface]` section using the same names as the upstream project:
+This add-on is designed to work with AmneziaWG **3.1**. The following optional fields are passed to the `[Interface]` section using the same names as the upstream project:
 
 | Options | Meaning |
 | --- | --- |
@@ -83,7 +86,7 @@ The following optional fields are passed to the `[Interface]` section using the 
 | `awg_random_trailers` | Enable random packet trailers. |
 | `awg_disable_cookies` | Disable WireGuard cookie replies. |
 
-Use values supplied by your AmneziaWG server administrator. The server must support the selected AmneziaWG features; otherwise the tunnel may fail to establish.
+Use values supplied by your AmneziaWG server administrator. AWG 3.1 settings must match on both sides. If the server is running an older AmneziaWG version, do not enable AWG 3.1-only options such as `awg_header_protection_key`, `awg_content_padding_addition`, `awg_random_trailers` or `awg_disable_cookies`.
 
 ## Using the proxy
 
